@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Location Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        
+        .instructions {
+            background: #e8f4fc;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 5px solid #3498db;
+        }
+        
+        .instructions h3 {
+            color: #2980b9;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .permission-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .permission-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .permission-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .permission-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .permission-status {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .permission-status i {
+            margin-right: 10px;
+        }
+        
+        .camera-container {
+            width: 100%;
+            background: #2c3e50;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            position: relative;
+            display: none;
+        }
+        
+        #video {
+            width: 100%;
+            display: block;
+            height: auto;
+            max-height: 400px;
+        }
+        
+        #capture-btn {
+            display: none;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: #e74c3c;
+            border: 5px solid white;
+            margin: 20px auto;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s;
+        }
+        
+        #capture-btn:hover {
+            transform: scale(1.05);
+            background: #c0392b;
+        }
+        
+        .photo-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .photo-card {
+            width: calc(50% - 10px);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            background: white;
+        }
+        
+        .photo-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+        
+        .location-info {
+            padding: 15px;
+            font-size: 14px;
+        }
+        
+        .location-info h3 {
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .granted {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .denied {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        @media (max-width: 600px) {
+            .photo-card {
+                width: 100%;
+            }
+            
+            .permission-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+        }
+        
+        .permission-note {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 14px;
+            border-left: 4px solid #6c757d;
+        }
+        
+        .permission-note h4 {
+            color: #495057;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-camera"></i> Photo Location Tracker</h1>
+        
+        <div class="instructions">
+            <h3>How to use:</h3>
+            <ol>
+                <li>Click "Enable Camera" to allow camera access</li>
+                <li>Click "Enable Location" to allow location access</li>
+                <li>Click the red camera button to take a photo</li>
+                <li>Your photo and location details will be displayed below</li>
+            </ol>
+        </div>
+        
+        <div class="permission-section">
+            <button id="enable-camera-btn" class="permission-btn">
+                <i class="fas fa-camera"></i> Enable Camera
+            </button>
+            <div id="camera-status" class="permission-status pending">
+                <i class="fas fa-clock"></i> Camera permission not yet requested
+            </div>
+            
+            <button id="enable-location-btn" class="permission-btn" disabled>
+                <i class="fas fa-map-marker-alt"></i> Enable Location
+            </button>
+            <div id="location-status" class="permission-status pending">
+                <i class="fas fa-clock"></i> Location permission not yet requested
+            </div>
+        </div>
+        
+        <div class="permission-note">
+            <h4>Note about permissions:</h4>
+            <p>On mobile devices, you must explicitly allow both camera and location access when prompted. 
+            Please look for the browser permission dialogs after clicking the buttons above.</p>
+        </div>
+        
+        <div class="camera-container" id="camera-container">
+            <video id="video" autoplay playsinline></video>
+        </div>
+        
+        <button id="capture-btn"></button>
+        
+        <div id="status" class="status warning">Please enable camera and location permissions to start</div>
+        
+        <h2><i class="fas fa-images"></i> Your Photos</h2>
+        <div class="photo-container" id="photo-container">
+            <!-- Photos will be added here -->
+            <div class="photo-card demo-card">
+                <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb" alt="Demo image">
+                <div class="location-info">
+                    <h3>Location Details:</h3>
+                    <p>Latitude: 40.7128</p>
+                    <p>Longitude: -74.0060</p>
+                    <p>Accuracy: 25 meters</p>
+                    <p><a href="https://www.google.com/maps?q=40.7128,-74.0060" target="_blank">View on Google Maps</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.getElementById('video');
+            const captureBtn = document.getElementById('capture-btn');
+            const photoContainer = document.getElementById('photo-container');
+            const statusDiv = document.getElementById('status');
+            const enableCameraBtn = document.getElementById('enable-camera-btn');
+            const enableLocationBtn = document.getElementById('enable-location-btn');
+            const cameraStatus = document.getElementById('camera-status');
+            const locationStatus = document.getElementById('location-status');
+            const cameraContainer = document.getElementById('camera-container');
+            
+            let stream = null;
+            let cameraAccess = false;
+            let locationAccess = false;
+            
+            // Remove demo card after first real photo is taken
+            const demoCard = document.querySelector('.demo-card');
+            
+            // Request camera access on button click
+            enableCameraBtn.addEventListener('click', initCamera);
+            
+            // Request location access on button click
+            enableLocationBtn.addEventListener('click', requestLocation);
+            
+            // Request camera access
+            async function initCamera() {
+                try {
+                    cameraStatus.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Requesting camera access...';
+                    cameraStatus.className = 'permission-status pending';
+                    
+                    stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { facingMode: 'environment' }, 
+                        audio: false 
+                    });
+                    
+                    video.srcObject = stream;
+                    cameraAccess = true;
+                    
+                    // Show camera and enable location button
+                    cameraContainer.style.display = 'block';
+                    enableLocationBtn.disabled = false;
+                    
+                    cameraStatus.innerHTML = '<i class="fas fa-check-circle"></i> Camera access granted!';
+                    cameraStatus.className = 'permission-status granted';
+                    
+                    enableCameraBtn.disabled = true;
+                    enableCameraBtn.innerHTML = '<i class="fas fa-camera"></i> Camera Enabled';
+                    
+                    statusDiv.textContent = "Camera enabled. Please enable location access.";
+                    statusDiv.className = "status success";
+                    
+                } catch (err) {
+                    cameraStatus.innerHTML = '<i class="fas fa-exclamation-circle"></i> Camera access denied';
+                    cameraStatus.className = 'permission-status denied';
+                    
+                    statusDiv.textContent = "Error accessing camera: " + err.message;
+                    statusDiv.className = "status error";
+                    console.error("Error accessing camera:", err);
+                }
+            }
+            
+            // Request location access
+            function requestLocation() {
+                if (!navigator.geolocation) {
+                    locationStatus.innerHTML = '<i class="fas fa-exclamation-circle"></i> Geolocation not supported';
+                    locationStatus.className = 'permission-status denied';
+                    
+                    statusDiv.textContent = "Geolocation is not supported by this browser.";
+                    statusDiv.className = "status error";
+                    return;
+                }
+                
+                locationStatus.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Requesting location access...';
+                locationStatus.className = 'permission-status pending';
+                
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        locationAccess = true;
+                        
+                        locationStatus.innerHTML = '<i class="fas fa-check-circle"></i> Location access granted!';
+                        locationStatus.className = 'permission-status granted';
+                        
+                        enableLocationBtn.disabled = true;
+                        enableLocationBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Location Enabled';
+                        
+                        // Show capture button
+                        captureBtn.style.display = 'block';
+                        
+                        statusDiv.textContent = "All permissions granted! Click the red button to take a photo.";
+                        statusDiv.className = "status success";
+                    },
+                    function(error) {
+                        locationStatus.innerHTML = '<i class="fas fa-exclamation-circle"></i> Location access denied';
+                        locationStatus.className = 'permission-status denied';
+                        
+                        statusDiv.textContent = "Location access denied. You can still take photos without location data.";
+                        statusDiv.className = "status warning";
+                        
+                        // Still show capture button but without location
+                        captureBtn.style.display = 'block';
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            }
+            
+            // Capture photo
+            captureBtn.addEventListener('click', function() {
+                if (!stream) {
+                    statusDiv.textContent = "Camera not available. Please allow camera access.";
+                    statusDiv.className = "status error";
+                    return;
+                }
+                
+                // Remove demo card if it exists
+                if (demoCard) {
+                    demoCard.remove();
+                }
+                
+                // Create canvas to capture the photo
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // Get location if available
+                if (locationAccess) {
+                    navigator.geolocation.getCurrentPosition(
+                        function(position) {
+                            const location = position.coords;
+                            savePhoto(canvas, location);
+                        },
+                        function(error) {
+                            // Location access was previously granted but failed now
+                            statusDiv.textContent = "Could not get location. Saving photo without location.";
+                            statusDiv.className = "status warning";
+                            savePhoto(canvas, null);
+                        },
+                        { enableHighAccuracy: true, timeout: 5000 }
+                    );
+                } else {
+                    savePhoto(canvas, null);
+                }
+            });
+            
+            // Save photo with location data
+            function savePhoto(canvas, location) {
+                const imgData = canvas.toDataURL('image/png');
+                
+                // Create photo card
+                const photoCard = document.createElement('div');
+                photoCard.className = 'photo-card';
+                
+                // Create image element
+                const img = document.createElement('img');
+                img.src = imgData;
+                photoCard.appendChild(img);
+                
+                // Create location info element
+                const locationInfo = document.createElement('div');
+                locationInfo.className = 'location-info';
+                
+                if (location) {
+                    locationInfo.innerHTML = `
+                        <h3>Location Details:</h3>
+                        <p>Latitude: ${location.latitude.toFixed(6)}</p>
+                        <p>Longitude: ${location.longitude.toFixed(6)}</p>
+                        <p>Accuracy: ${location.accuracy.toFixed(2)} meters</p>
+                        <p><a href="https://www.google.com/maps?q=${location.latitude},${location.longitude}" target="_blank">View on Google Maps</a></p>
+                    `;
+                } else {
+                    locationInfo.innerHTML = `
+                        <h3>Location Details:</h3>
+                        <p>No location data available</p>
+                    `;
+                }
+                
+                photoCard.appendChild(locationInfo);
+                photoContainer.prepend(photoCard);
+                
+                statusDiv.textContent = "Photo captured successfully!";
+                statusDiv.className = "status success";
+            }
+        });
+    </script>
+</body>
+</html>
